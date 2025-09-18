@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Braille Book</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#f2f2f2;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+    }
+    header {
+      background:#004aad;
+      color:white;
+      padding:15px;
+      width:100%;
+      text-align:center;
+      font-size:22px;
+    }
+    .book {
+      display:none;
+      width:800px;
+      height:500px;
+      background:#fff;
+      border-radius:8px;
+      box-shadow:0 0 20px rgba(0,0,0,0.3);
+      overflow:hidden;
+      margin-top:20px;
+      transform: perspective(1500px) rotateY(0deg);
+      transition: transform 1s ease;
+    }
+    .page {
+      width:50%;
+      padding:30px;
+      overflow-y:auto;
+      box-sizing:border-box;
+      height:100%;
+    }
+    .left {
+      background:#f7f7f7;
+      border-right:2px solid #ccc;
+    }
+    .right {
+      background:#fffaf5;
+    }
+    h3 {
+      text-align:center;
+      margin-top:0;
+    }
+    .braille {
+      font-family: "SimBraille", Arial, sans-serif;
+      font-size:20px;
+      background:#eee;
+      padding:15px;
+      border-radius:8px;
+      line-height:2;
+    }
+    .controls {
+      margin-top:20px;
+      text-align:center;
+    }
+    button {
+      padding:10px 20px;
+      margin:10px;
+      border:none;
+      border-radius:6px;
+      background:#004aad;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+    }
+    button:hover {
+      background:#0066cc;
+    }
+    /* Braille-style buttons */
+    .braille-btn {
+      display:inline-block;
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      background:#333;
+      color:white;
+      font-size:20px;
+      font-weight:bold;
+      margin:10px;
+      line-height:50px;
+      cursor:pointer;
+      text-align:center;
+      box-shadow:0 0 5px rgba(0,0,0,0.4);
+    }
+    .braille-btn:hover {
+      background:#555;
+    }
+    .top-buttons {
+      margin:15px;
+      text-align:center;
+    }
+    .tag {
+      font-size:14px;
+      margin-top:5px;
+      color:#333;
+      font-weight:bold;
+    }
+    .btn-container {
+      display:inline-block;
+      text-align:center;
+      margin:0 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>📘 Smart Braille Book Prototype</header>
+
+  <!-- Braille style buttons with tags -->
+  <div class="top-buttons">
+    <div class="btn-container">
+      <div class="braille-btn" onclick="openBook()">⠕</div>
+      <div class="tag">Open Book</div>
+    </div>
+    <div class="btn-container">
+      <div class="braille-btn" onclick="toggleBraille()">⠃</div>
+      <div class="tag">Braille On/Off</div>
+    </div>
+  </div>
+
+  <div class="book" id="book">
+    <!-- Left page (Braille) -->
+    <div class="page left" id="braillePage">
+      <h3>🔡 Braille</h3>
+      <p class="braille" id="brailleText">
+        ⠚⠕⠕⠇⠁ ⠏⠑⠗ ⠊⠄ ⠉⠓⠊⠙⠊⠽⠁ ⠗⠁⠝⠊ …<br><br>
+        ⠚⠕⠕⠇⠁ ⠏⠑⠗ ⠊⠄ ⠞⠊⠞⠇⠊ ⠗⠁⠝⠊ …
+      </p>
+    </div>
+
+    <!-- Right page (Normal Text) -->
+    <div class="page right">
+      <h3 id="chapterTitle">Class 1 Hindi - Chapter 1: झूला</h3>
+      <p id="chapterText">
+        पाठ 1 : झूला <br><br>
+        झूले पर आई चिड़िया रानी। <br>
+        झूले पर आई तितली रानी। <br>
+        झूले पर आया पप्पू भी। <br>
+        झूले पर आई रानी जी।। <br>
+      </p>
+      <div class="controls">
+        <button onclick="readText()">🔊 Read Aloud</button>
+        <button onclick="nextChapter()">➡️ Next Chapter</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let chapters = [
+      {
+        title: "Class 1 Hindi - Chapter 1: झूला",
+        text: "पाठ 1 : झूला\n\nझूले पर आई चिड़िया रानी।\nझूले पर आई तितली रानी।\nझूले पर आया पप्पू भी।\nझूले पर आई रानी जी।।",
+        braille: "⠚⠕⠕⠇⠁ ⠏⠑⠗ ⠊⠄ ⠉⠓⠊⠙⠊⠽⠁ ⠗⠁⠝⠊ …"
+      },
+      {
+        title: "English Sample Chapter",
+        text: "Chapter 1: The Sun rises in the East.\nBirds are singing.\nChildren are playing in the park.",
+        braille: "⠞⠓⠑ ⠎⠥⠝ ⠗⠊⠎⠑⠎ ⠊⠝ ⠞⠓⠑ ⠑⠁⠎⠞ …"
+      }
+    ];
+    let current = 0;
+
+    function nextChapter() {
+      current = (current + 1) % chapters.length;
+      document.getElementById("chapterTitle").innerText = chapters[current].title;
+      document.getElementById("chapterText").innerText = chapters[current].text;
+      document.getElementById("brailleText").innerText = chapters[current].braille;
+      // page flip animation
+      let book = document.getElementById("book");
+      book.style.transform = "perspective(1500px) rotateY(-10deg)";
+      setTimeout(() => {
+        book.style.transform = "perspective(1500px) rotateY(0deg)";
+      }, 600);
+    }
+
+    function readText() {
+      let msg = new SpeechSynthesisUtterance(chapters[current].text);
+      if(current === 0) {
+        msg.lang = "hi-IN"; // Hindi
+      } else {
+        msg.lang = "en-US"; // English
+      }
+      window.speechSynthesis.speak(msg);
+    }
+
+    function openBook() {
+      let book = document.getElementById("book");
+      book.style.display = "flex";
+      book.style.transform = "perspective(1500px) rotateY(-90deg)";
+      setTimeout(() => {
+        book.style.transform = "perspective(1500px) rotateY(0deg)";
+      }, 600);
+    }
+
+    function toggleBraille() {
+      let bp = document.getElementById("braillePage");
+      if (bp.style.display === "none") {
+        bp.style.display = "block";
+      } else {
+        bp.style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>
